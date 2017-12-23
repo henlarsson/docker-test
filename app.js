@@ -1,10 +1,16 @@
 const koa = require('koa')
-const router = require('koa-router')()
+
+const log = async (ctx, next) => {
+  console.log('Started', `${ctx.request.method} ${ctx.request.url}`)
+  await next()
+  console.log('End')
+}
 
 const start = async () => {
   try {
     const app = new koa()
-    app.use(router.routes())
+    app.use(log)
+    app.use(require('./controller').routes())
     app.proxy = true
     app.listen(process.env.SERVICE_PORT || 4000)
   } catch (err) {
@@ -20,10 +26,5 @@ const terminate = signal => {
 
 process.on('SIGINT', () => terminate('SIGINT'))
 process.on('SIGTERM', () => terminate('SIGTERM'))
-
-router.get('/', async (ctx, next) => {
-  ctx.body = 'I am docker'
-  await next()
-})
 
 start()
